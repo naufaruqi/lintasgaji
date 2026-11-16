@@ -769,6 +769,14 @@
         throw new Error("Golongan tidak valid untuk menghitung tunjangan jabatan.");
       }
 
+      function getTarifUangMakan(golongan) {
+        const tarifPerGolongan = { III: 37000, IV: 41000 };
+        const tarif = tarifPerGolongan[golongan];
+        if (tarif === undefined)
+          throw new Error("Golongan tidak valid untuk menghitung tarif uang makan.");
+        return tarif;
+      }
+
       function getGajiPokok(golongan, ruang, mkg) {
         const baris = TABEL_GAJI[golongan]?.[ruang];
         if (!baris)
@@ -820,11 +828,10 @@
           tunjIstri +
           tunjAnak +
           p.jabatan +
-          tunjBeras +
-          pembulatan;
+          tunjBeras;
         const totalPotongan = potIWP + potBPJS;
         const THP =
-          bruto + tunjKinerja - totalPotongan - potonganKhususTPG;
+          bruto + pembulatan + tunjKinerja - totalPotongan - potonganKhususTPG;
         const uangMakan = p.tarif * p.hari;
         const tarifPajakUangMakan = p.golongan === "IV" ? 0.15 : 0.05;
         const taxUangMakan = uangMakan * tarifPajakUangMakan;
@@ -888,8 +895,9 @@
             serdik: $("serdik").value === "ya",
             layakTPG: $("layakTPG").value === "ya",
             hari: ambilAngka("hari"),
-            tarif: ambilAngka("tarif"),
+            tarif: getTarifUangMakan($("golongan").value),
           };
+          $("tarif").value = String(p.tarif);
           p.tertanggung = hitungTanggunganBeras(p.menikah, p.jumlahAnak);
           $("tertanggung").value = String(p.tertanggung);
           p.jabatan = hitungTunjanganJabatan(p.golongan, p.serdik);
@@ -913,7 +921,6 @@
             ["Tunjangan anak", h.tunjAnak],
             ["Tunjangan jabatan", p.jabatan],
             ["Tunjangan beras", h.tunjBeras],
-            ["Pembulatan", h.pembulatan],
             ["Bruto", h.bruto, "total"],
             ["Uang makan bruto", h.uangMakan],
             ...(h.tpgLayak
@@ -925,11 +932,12 @@
                   ],
                 ]
               : [["Tunjangan kinerja", h.tunjKinerja]]),
+            ["Pembulatan", h.pembulatan],
             [
               h.tpgLayak
                 ? "Bruto + Uang Makan bruto + TPG + Selisih Tukin"
                 : "Bruto + Uang Makan bruto + Tunjangan kinerja",
-              h.bruto + h.uangMakan + h.tunjKinerja,
+              h.bruto + h.uangMakan + h.tunjKinerja + h.pembulatan,
               "total",
             ],
           ]);
@@ -938,29 +946,28 @@
             ["BPJS (1% dari Gaji & Tunj. kecuali Tunj. Beras)", h.potBPJS],
             ["Potongan (IWP + BPJS)", h.totalPotongan, "total"],
             [
-              `Potongan khusus TPG (${h.tarifPotonganKhususTPG * 100}% dari gaji pokok)`,
+              `Pajak PPH 21 TPG (${h.tarifPotonganKhususTPG * 100}%)`,
               h.potonganKhususTPG,
             ],
             [
-              `Pajak uang makan (${h.tarifPajakUangMakan * 100}%)`,
+              `Pajak PPH 21 uang makan (${h.tarifPajakUangMakan * 100}%)`,
               h.taxUangMakan,
             ],
             ["Total semua potongan", h.totalSemuaPotongan, "total"],
           ]);
           renderRows("ringkasan", [
-            ["Gapok + Tunjangan", h.THP, "total"],
             [
-              "Bruto - Potongan (IWP + BPJS)",
-              h.bruto - h.totalPotongan,
+              "Bruto - (IWP + BPJS)",
+              h.bruto + h.pembulatan - h.totalPotongan,
             ],
             [
-              `Uang Makan Bruto - Pajak uang makan (${h.tarifPajakUangMakan * 100}%)`,
+              `Uang Makan - Pajak (${h.tarifPajakUangMakan * 100}%)`,
               h.uangMakan - h.taxUangMakan,
             ],
             ...(h.tpgLayak
               ? [
                   [
-                    `TPG (Tunjangan Profesi Guru) - Potongan khusus TPG (${h.tarifPotonganKhususTPG * 100}% dari gaji pokok)`,
+                    `TPG (Tunj. Profesi Guru) - Pajak (${h.tarifPotonganKhususTPG * 100}%)`,
                     h.nominalTPG - h.potonganKhususTPG,
                   ],
                   ["Selisih Tukin", h.selisihTukin],
