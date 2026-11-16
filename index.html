@@ -451,7 +451,7 @@
           <div class="grid">
             <div class="field">
               <label for="nama">Nama pegawai</label
-              ><input id="nama" placeholder="Nama Pegawai" />
+              ><input id="nama" placeholder="nama pegawai" />
             </div>
             <div class="field">
               <label id="statusLabel" for="status">Status pegawai</label>
@@ -821,8 +821,8 @@
         const THP =
           bruto + tunjKinerja - totalPotongan - potonganKhususTPG;
         const uangMakan = p.tarif * p.hari;
-        const tarifPotonganKhususUangMakan = p.golongan === "IV" ? 0.15 : 0.05;
-        const taxUangMakan = uangMakan * tarifPotonganKhususUangMakan;
+        const tarifPajakUangMakan = p.golongan === "IV" ? 0.15 : 0.05;
+        const taxUangMakan = uangMakan * tarifPajakUangMakan;
         const netUangMakan = uangMakan - taxUangMakan;
         const totalSemuaPotongan =
           totalPotongan + potonganKhususTPG + taxUangMakan;
@@ -845,6 +845,7 @@
           totalPotongan,
           THP,
           uangMakan,
+          tarifPajakUangMakan,
           taxUangMakan,
           netUangMakan,
           totalSemuaPotongan,
@@ -935,18 +936,20 @@
               `Potongan khusus TPG (${h.tarifPotonganKhususTPG * 100}% dari gaji pokok)`,
               h.potonganKhususTPG,
             ],
-            [`Pajak uang makan (${h.tarifPotonganKhususUangMakan * 100})%`, h.taxUangMakan],
-            // ["Pajak uang makan (5%)", h.taxUangMakan],
+            [
+              `Pajak uang makan (${h.tarifPajakUangMakan * 100}%)`,
+              h.taxUangMakan,
+            ],
             ["Total semua potongan", h.totalSemuaPotongan, "total"],
           ]);
           renderRows("ringkasan", [
-//          ["Gapok + Tunjangan", h.THP, "total"],
+            ["Gapok + Tunjangan", h.THP, "total"],
             [
               "Bruto - Potongan (IWP + BPJS)",
               h.bruto - h.totalPotongan,
             ],
             [
-              "Uang Makan Bruto - Pajak uang makan (5%)",
+              `Uang Makan Bruto - Pajak uang makan (${h.tarifPajakUangMakan * 100}%)`,
               h.uangMakan - h.taxUangMakan,
             ],
             ...(h.tpgLayak
