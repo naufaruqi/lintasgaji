@@ -821,7 +821,8 @@
         const THP =
           bruto + tunjKinerja - totalPotongan - potonganKhususTPG;
         const uangMakan = p.tarif * p.hari;
-        const taxUangMakan = uangMakan * 0.05;
+        const tarifPotonganKhususUangMakan = p.golongan === "IV" ? 0.15 : 0.05;
+        const taxUangMakan = uangMakan * tarifPotonganKhususUangMakan;
         const netUangMakan = uangMakan - taxUangMakan;
         const totalSemuaPotongan =
           totalPotongan + potonganKhususTPG + taxUangMakan;
