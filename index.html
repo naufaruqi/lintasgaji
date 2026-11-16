@@ -935,7 +935,8 @@
               `Potongan khusus TPG (${h.tarifPotonganKhususTPG * 100}% dari gaji pokok)`,
               h.potonganKhususTPG,
             ],
-            ["Pajak uang makan (5%)", h.taxUangMakan],
+            [`Pajak uang makan (${h.tarifPotonganKhususUangMakan * 100}%`, h.taxUangMakan],
+            // ["Pajak uang makan (5%)", h.taxUangMakan],
             ["Total semua potongan", h.totalSemuaPotongan, "total"],
           ]);
           renderRows("ringkasan", [
