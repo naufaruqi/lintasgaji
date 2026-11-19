@@ -6,7 +6,8 @@
     <title>LintasGaji — Simulasi Penghasilan PNS Guru Kemenag</title>
     <style>
       :root {
-        --sidebar-width: 440px;
+        --sidebar-width: 240px;
+        --page-gutter: 24px;
         font-family:
           Inter,
           system-ui,
@@ -19,9 +20,22 @@
       * {
         box-sizing: border-box;
       }
+      *:not(input):not(textarea):not(select) {
+        scrollbar-width: none;
+      }
+      *:not(input):not(textarea):not(select)::-webkit-scrollbar {
+        width: 0;
+        height: 0;
+        display: none;
+      }
       body {
         margin: 0;
         padding: 24px;
+        padding-bottom: 96px;
+        transition: padding-left 0.25s ease;
+      }
+      body.sidebar-open {
+        padding-left: calc(var(--sidebar-width) + var(--page-gutter));
       }
       .wrap {
         max-width: 1100px;
@@ -63,10 +77,16 @@
         border: 0;
         border-radius: 0;
         box-shadow: none;
+        transition:
+          width 0.25s ease,
+          padding 0.25s ease,
+          border-radius 0.25s ease,
+          box-shadow 0.25s ease;
       }
       body.sidebar-open #inputSidebar {
         width: var(--sidebar-width);
         padding: 20px;
+        padding-bottom: 96px;
         border-right: 1px solid #e4e8ef;
         border-radius: 0 16px 16px 0;
         box-shadow: 0 8px 28px #18223024;
@@ -100,7 +120,7 @@
       }
       .sidebar-open-button {
         position: fixed;
-        z-index: 998;
+        z-index: 1102;
         right: 24px;
         bottom: 24px;
         width: auto;
@@ -113,53 +133,24 @@
         top: 0;
         left: var(--sidebar-width);
         display: none;
-        align-items: center;
-        justify-content: center;
         width: 18px;
         height: 100vh;
         cursor: col-resize;
         touch-action: none;
         user-select: none;
+        transition: left 0.25s ease;
       }
       body.sidebar-open #sidebarResizer {
         display: flex;
-      }
-      .sidebar-resizer::before {
-        width: 4px;
-        height: 100%;
-        min-height: 48px;
-        border-radius: 999px;
-        background: #d0d5dd;
-        content: "";
-      }
-      .sidebar-resizer:hover::before,
-      .sidebar-resizer:focus-visible::before {
-        background: #175cd3;
-        box-shadow: 0 0 0 4px #dbeafe;
-      }
-      .sidebar-resizer:focus-visible {
-        outline: none;
       }
       body.resizing-sidebar {
         cursor: col-resize;
         user-select: none;
       }
       body.resizing-sidebar #inputSidebar,
-      body.resizing-sidebar #sidebarResizer {
+      body.resizing-sidebar #sidebarResizer,
+      body.resizing-sidebar {
         transition: none;
-      }
-      .sidebar-backdrop {
-        position: fixed;
-        z-index: 999;
-        inset: 0;
-        display: block;
-        background: transparent;
-        visibility: hidden;
-        pointer-events: none;
-      }
-      body.sidebar-open .sidebar-backdrop {
-        visibility: visible;
-        pointer-events: auto;
       }
       h2 {
         font-size: 18px;
@@ -396,7 +387,23 @@
       }
       @media (max-width: 800px) {
         body {
+          --page-gutter: 14px;
           padding: 14px;
+          padding-bottom: 84px;
+        }
+        body.sidebar-open {
+          padding-left: 14px;
+        }
+        .wrap {
+          position: relative;
+          left: 0;
+          transition: left 0.25s ease;
+        }
+        body.sidebar-open .wrap {
+          left: var(--sidebar-width);
+        }
+        body.resizing-sidebar .wrap {
+          transition: none;
         }
         .layout {
           display: block;
@@ -428,17 +435,7 @@
         <p>
           Simulasi Penghasilan PNS Guru Kementerian Agama
         </p>
-        <button
-          type="button"
-          class="sidebar-open-button"
-          id="openSidebar"
-          aria-controls="inputSidebar"
-          aria-expanded="false"
-        >
-          &#9776; Data pegawai
-        </button>
       </header>
-      <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
       <div class="layout" id="appLayout">
         <section
           class="panel"
@@ -622,7 +619,7 @@
           role="separator"
           aria-orientation="vertical"
           aria-label="Atur lebar panel Data pegawai"
-          aria-valuemin="300"
+          aria-valuemin="240"
           aria-valuemax="700"
           aria-valuenow="440"
           aria-hidden="true"
@@ -660,6 +657,15 @@
         </section>
       </div>
     </div>
+    <button
+      type="button"
+      class="sidebar-open-button"
+      id="openSidebar"
+      aria-controls="inputSidebar"
+      aria-expanded="false"
+    >
+      &#9776;
+    </button>
     <script>
       "use strict";
 
@@ -1029,7 +1035,6 @@
         const resizer = $("sidebarResizer");
         const openButton = $("openSidebar");
         const closeButton = $("closeSidebar");
-        const backdrop = $("sidebarBackdrop");
 
         function getMaximumWidth() {
           if (window.matchMedia("(max-width: 800px)").matches) {
@@ -1039,7 +1044,7 @@
         }
 
         function getMinimumWidth() {
-          return Math.min(300, getMaximumWidth());
+          return Math.min(240, getMaximumWidth());
         }
 
         function setSidebarWidth(width) {
@@ -1116,11 +1121,14 @@
             setSidebarWidth(getMaximumWidth());
           }
         });
-        resizer.addEventListener("dblclick", () => setSidebarWidth(440));
+        resizer.addEventListener("dblclick", () =>
+          setSidebarWidth(getMinimumWidth()),
+        );
 
-        openButton.addEventListener("click", () => setSidebarOpen(true));
+        openButton.addEventListener("click", () =>
+          setSidebarOpen(!document.body.classList.contains("sidebar-open")),
+        );
         closeButton.addEventListener("click", () => setSidebarOpen(false));
-        backdrop.addEventListener("click", () => setSidebarOpen(false));
         document.addEventListener("keydown", (event) => {
           if (
             event.key === "Escape" &&
@@ -1129,14 +1137,14 @@
             setSidebarOpen(false);
           }
         });
-        setSidebarWidth(440);
+        setSidebarWidth(getMinimumWidth());
         window.addEventListener("resize", () => {
           const currentWidth = parseFloat(
             getComputedStyle(document.documentElement).getPropertyValue(
               "--sidebar-width",
             ),
           );
-          setSidebarWidth(currentWidth || 440);
+          setSidebarWidth(currentWidth || getMinimumWidth());
         });
       }
 
