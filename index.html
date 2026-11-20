@@ -416,6 +416,72 @@
         height: 100%;
         margin: 0;
       }
+      /* Start Gaji 13 dan THR & Tahunan */
+      .annual-benefit-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+      .annual-benefit-card {
+        min-width: 0;
+        padding: 16px;
+        border: 1px solid #dce4ef;
+        border-radius: 12px;
+        background: #fbfcfe;
+      }
+      .annual-benefit-card h3 {
+        margin: 0 0 4px;
+        color: #344054;
+        font-size: 14px;
+      }
+      .annual-benefit-card .amount {
+        margin: 4px 0 12px;
+        font-size: clamp(22px, 3vw, 28px);
+      }
+      .annual-benefit-card table {
+        font-size: 12px;
+      }
+      .annual-benefit-card td {
+        padding: 6px 2px;
+      }
+      .annual-benefit-card td:last-child {
+        white-space: nowrap;
+      }
+      .annual-benefit-card .muted {
+        margin-top: 10px;
+        line-height: 1.5;
+      }
+      .annual-benefit-card.annual-total {
+        grid-column: 1 / -1;
+        border-color: #b2ddff;
+        background: #eff8ff;
+      }
+      .annual-benefit-card.annual-total .amount {
+        color: #1849a9;
+      }
+      .eligibility-status {
+        display: inline-flex;
+        margin: 8px 0 12px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 700;
+      }
+      .eligibility-status.eligible {
+        color: #027a48;
+        background: #ecfdf3;
+      }
+      .eligibility-status.not-eligible {
+        color: #b54708;
+        background: #fffaeb;
+      }
+      .benefit-sources a {
+        color: #175cd3;
+        font-weight: 650;
+      }
+      /* End: Gaji 13 dan THR & Tahunan */
+
       .result-top span {
         font-size: 13px;
         color: #175cd3;
@@ -701,6 +767,14 @@
         .result-summary-row {
           grid-template-columns: 1fr;
         }
+        /* Start Gaji 13 dan THR & Tahunan */
+        .annual-benefit-grid {
+          grid-template-columns: 1fr;
+        }
+        .annual-benefit-card.annual-total {
+          grid-column: auto;
+        }
+        /* End: Gaji 13 dan THR & Tahunan */
         .chart-content {
           flex-direction: column;
           gap: 18px;
@@ -1009,6 +1083,62 @@
             dan komponen objek potongan diverifikasi sebelum digunakan untuk
             payroll.
           </div>
+          <br>
+          <!--Start Gaji 13 dan THR & Tahunan -->
+          <div class="annual-benefit-grid" aria-label="Estimasi THR, gaji ketiga belas, penghasilan tahunan, dan analisis zakat">
+            <article class="annual-benefit-card">
+              <h3>Estimasi THR 2026</h3>
+              <div class="amount" id="thrAmount">Rp0</div>
+              <table aria-label="Komponen estimasi THR">
+                <tbody id="thrComponents"></tbody>
+              </table>
+            </article>
+            <article class="annual-benefit-card">
+              <h3>Estimasi Gaji ke-13 2026</h3>
+              <div class="amount" id="gaji13Amount">Rp0</div>
+              <table aria-label="Komponen estimasi gaji ketiga belas">
+                <tbody id="gaji13Components"></tbody>
+              </table>
+            </article>
+            <article class="annual-benefit-card annual-total">
+              <h3>Potensi penghasilan setahun</h3>
+              <div class="amount" id="annualPotential">Rp0</div>
+              <p class="muted" id="annualPotentialNote">
+                Simulasi 12 bulan penerimaan saat ini ditambah THR dan Gaji ke-13.
+              </p>
+            </article>
+            <article class="annual-benefit-card zakat-analysis">
+              <h3>Analisis kelayakan zakat penghasilan dari gaji bersih</h3>
+              <div id="zakatEligibilityStatus" class="eligibility-status not-eligible" role="status">
+                Belum mencapai nisab
+              </div>
+              <table aria-label="Rincian analisis kelayakan zakat penghasilan">
+                <tbody id="zakatEligibilityComponents"></tbody>
+              </table>
+              <p class="muted" id="zakatEligibilityNote">
+                Perbandingan menggunakan potensi penghasilan setahun dan nisab BAZNAS 2026.
+              </p>
+              <p class="muted benefit-sources">
+                Rujukan:
+                <a href="https://baznas.go.id/zakatpenghasilan" target="_blank" rel="noopener noreferrer">
+                  Nisab zakat penghasilan BAZNAS 2026
+                </a>
+              </p>
+            </article>
+            <article class="annual-benefit-card zakat-analysis">
+              <h3>Analisis kelayakan zakat penghasilan dari gaji bruto</h3>
+              <div id="zakatBrutoEligibilityStatus" class="eligibility-status not-eligible" role="status">
+                Belum mencapai nisab
+              </div>
+              <table aria-label="Rincian analisis zakat penghasilan berdasarkan bruto tahunan">
+                <tbody id="zakatBrutoEligibilityComponents"></tbody>
+              </table>
+              <p class="muted" id="zakatBrutoEligibilityNote">
+                Perbandingan menggunakan bruto bulanan ditambah estimasi THR dan Gaji ke-13.
+              </p>
+            </article>
+          </div>
+          <!-- End Gaji 13 dan THR & Tahunan -->
         </section>
 
       </div>
@@ -1084,6 +1214,9 @@
         11: 5183000, 12: 7271000, 13: 8562000, 14: 11670000, 15: 14721000,
         16: 20695000, 17: 29085000,
       };
+
+      const NISAB_ZAKAT_PENGHASILAN_TAHUNAN = 91681728;
+      const KADAR_ZAKAT_PENGHASILAN = 0.025;
 
       const TABEL_GRADE_GURU = {
         III: {
@@ -1236,7 +1369,86 @@
           )
           .join("");
       }
+      // Start Gaji 13 dan THR & Tahunan
 
+      function renderBenefitEstimates(h, p) {
+        const faktorPembayaran = p.status === "CPNS" ? 0.8 : 1;
+        const components = [
+          ["Gaji pokok", h.gajiPokok],
+          ["Tunjangan keluarga", h.tunjIstri + h.tunjAnak],
+          ["Tunjangan pangan", h.tunjBeras * faktorPembayaran],
+          ["Tunjangan jabatan/umum", h.jabatan * faktorPembayaran],
+          ...(h.tpgLayak
+            ? [
+                ["TPG (Tunjangan Profesi Guru)", h.nominalTPG],
+                ["Selisih Tukin (Nominal Grade - TPG)", h.selisihTukin],
+              ]
+            : [["Tunjangan kinerja", h.tunjKinerja]]),
+        ];
+        const total = components.reduce((sum, [, value]) => sum + value, 0);
+        const potensiTahunan = h.totalPenerimaan * 12 + total * 2;
+        const memenuhiNisab =
+          potensiTahunan >= NISAB_ZAKAT_PENGHASILAN_TAHUNAN;
+        const estimasiZakat = memenuhiNisab
+          ? potensiTahunan * KADAR_ZAKAT_PENGHASILAN
+          : 0;
+        const estimasiZakatBulanan = estimasiZakat / 12;
+        const brutoBulanan = h.bruto + h.uangMakan + h.tunjKinerja;
+        const potensiBrutoTahunan = brutoBulanan * 12 + total * 2;
+        const memenuhiNisabBruto =
+          potensiBrutoTahunan >= NISAB_ZAKAT_PENGHASILAN_TAHUNAN;
+        const estimasiZakatBruto = memenuhiNisabBruto
+          ? potensiBrutoTahunan * KADAR_ZAKAT_PENGHASILAN
+          : 0;
+        const estimasiZakatBrutoBulanan = estimasiZakatBruto / 12;
+
+        $("thrAmount").textContent = rupiah(total);
+        $("gaji13Amount").textContent = rupiah(total);
+        $("annualPotential").textContent = rupiah(potensiTahunan);
+        $("annualPotentialNote").textContent =
+          `12 × ${rupiah(h.totalPenerimaan)} penerimaan bulanan + 2 × ${rupiah(total)} estimasi THR/Gaji ke-13.`;
+        $("zakatEligibilityStatus").textContent = memenuhiNisab
+          ? "Memenuhi nisab"
+          : "Belum mencapai nisab";
+        $("zakatEligibilityStatus").className = memenuhiNisab
+          ? "eligibility-status eligible"
+          : "eligibility-status not-eligible";
+        $("zakatEligibilityNote").textContent = memenuhiNisab
+          ? "Estimasi zakat dihitung 2,5% dari potensi penghasilan tahunan; nominal aktual mengikuti ketentuan yang berlaku."
+          : "Potensi penghasilan tahunan belum mencapai nisab zakat penghasilan BAZNAS 2026.";
+        renderRows("zakatEligibilityComponents", [
+          ["Potensi penghasilan setahun", potensiTahunan],
+          ["Nisab BAZNAS 2026", NISAB_ZAKAT_PENGHASILAN_TAHUNAN],
+          ["Estimasi zakat (2,5%)", estimasiZakat, "total"],
+          ["Estimasi zakat per bulan (jika dibayar bulanan)", estimasiZakatBulanan],
+        ]);
+        $("zakatBrutoEligibilityStatus").textContent = memenuhiNisabBruto
+          ? "Memenuhi nisab"
+          : "Belum mencapai nisab";
+        $("zakatBrutoEligibilityStatus").className = memenuhiNisabBruto
+          ? "eligibility-status eligible"
+          : "eligibility-status not-eligible";
+        $("zakatBrutoEligibilityNote").textContent = memenuhiNisabBruto
+          ? "Estimasi zakat dihitung 2,5% dari bruto potensi penghasilan setahun."
+          : "Bruto potensi penghasilan setahun belum mencapai nisab zakat penghasilan BAZNAS 2026.";
+        renderRows("zakatBrutoEligibilityComponents", [
+          ["Bruto penghasilan bulanan", brutoBulanan],
+          ["THR dan Gaji ke-13", total * 2],
+          ["Bruto potensi penghasilan setahun", potensiBrutoTahunan],
+          ["Nisab BAZNAS 2026", NISAB_ZAKAT_PENGHASILAN_TAHUNAN],
+          ["Estimasi zakat (2,5%)", estimasiZakatBruto, "total"],
+          [
+            "Estimasi zakat per bulan (jika dibayar bulanan)",
+            estimasiZakatBrutoBulanan,
+          ],
+        ]);
+        renderRows("thrComponents", [...components, ["Total estimasi", total, "total"]]);
+        renderRows("gaji13Components", [
+          ...components,
+          ["Total estimasi", total, "total"],
+        ]);
+      }
+// End Gaji 13 dan THR & Tahunan
       function renderSummaryBars(rows) {
         const maximum = Math.max(...rows.map(([, value]) => value), 1);
         $("ringkasanBar").innerHTML = rows
@@ -1333,9 +1545,11 @@
           $("identitas").textContent =
             `${p.nama} · ${p.status} · ${p.golongan}/${p.ruang} · MKG ${p.mkg}`;
           $("total").textContent = rupiah(h.totalPenerimaan);
+          // Start Gaji 13 dan THR & Tahunan
+          renderBenefitEstimates(h, p);
+        // End Gaji 13 dan THR & Tahunan
           renderChart(h);
           renderRows("penghasilan", [
-//          ["Gaji pokok (acuan)", h.gajiAcuan],
             ["Gaji pokok dibayarkan", h.gajiPokok],
             ["Tunjangan istri/suami", h.tunjIstri],
             ["Tunjangan anak", h.tunjAnak],
