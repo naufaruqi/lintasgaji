@@ -403,6 +403,19 @@
         padding: 16px;
         margin-bottom: 14px;
       }
+      .result-summary-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: stretch;
+        gap: 16px;
+        margin-bottom: 14px;
+      }
+      .result-summary-row .result-top,
+      .result-summary-row .summary-bar-card {
+        min-width: 0;
+        height: 100%;
+        margin: 0;
+      }
       .result-top span {
         font-size: 13px;
         color: #175cd3;
@@ -470,6 +483,63 @@
         font-size: 12px;
         line-height: 1.5;
         margin-top: 14px;
+      }
+      .summary-bar-card {
+        margin-top: 16px;
+        padding: 16px;
+        border: 1px solid #e4e8ef;
+        border-radius: 12px;
+        background: #fbfcfe;
+      }
+      .summary-bar-card h3 {
+        margin: 0 0 14px;
+        font-size: 14px;
+      }
+      .summary-bar-list {
+        display: grid;
+        gap: 12px;
+      }
+      .summary-bar-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 120px;
+        align-items: center;
+        gap: 12px;
+      }
+      .summary-bar-label {
+        grid-column: 1 / -1;
+        color: #475467;
+        font-size: 12px;
+        line-height: 1.35;
+      }
+      .summary-bar-track {
+        height: 10px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: #e9eef6;
+      }
+      .summary-bar-fill {
+        width: 0;
+        height: 100%;
+        border-radius: inherit;
+        background: #175cd3;
+        transition: width 0.35s ease;
+      }
+      .summary-bar-row:nth-child(2) .summary-bar-fill {
+        background: #079455;
+      }
+      .summary-bar-row:nth-child(3) .summary-bar-fill {
+        background: #875bf7;
+      }
+      .summary-bar-row:nth-child(4) .summary-bar-fill {
+        background: #f79009;
+      }
+      .summary-bar-row:nth-child(n + 5) .summary-bar-fill {
+        background: #98a2b3;
+      }
+      .summary-bar-value {
+        text-align: right;
+        color: #344054;
+        font-size: 13px;
       }
       .error {
         color: #b42318;
@@ -628,9 +698,18 @@
         .panel {
           padding: 16px;
         }
+        .result-summary-row {
+          grid-template-columns: 1fr;
+        }
         .chart-content {
           flex-direction: column;
           gap: 18px;
+        }
+        .summary-bar-row {
+          grid-template-columns: 1fr 100px;
+        }
+        .summary-bar-label {
+          grid-column: 1 / -1;
         }
         .pie-chart {
           flex-basis: 180px;
@@ -905,10 +984,16 @@
           </div>
         </section>
         <section class="panel">
-          <div class="result-top">
-            <span id="identitas">Ahmad Fauzi · PNS · III/a · MKG 0</span>
-            <div class="amount" id="total">Rp0</div>
-            <p>Total penerimaan termasuk uang makan bersih</p>
+          <div class="result-summary-row">
+            <div class="result-top">
+              <span id="identitas">Ahmad Fauzi · PNS · III/a · MKG 0</span>
+              <div class="amount" id="total">Rp0</div>
+              <p>Total penerimaan termasuk uang makan bersih</p>
+            </div>
+            <section class="summary-bar-card" aria-label="Visualisasi ringkasan">
+              <h3>Visualisasi Ringkasan</h3>
+              <div class="summary-bar-list" id="ringkasanBar"></div>
+            </section>
           </div>
           <div class="section-label section-divider">Komponen penghasilan</div>
           <table>
@@ -919,10 +1004,6 @@
             <tbody id="potongan"></tbody>
           </table>
           
-          <div class="section-label section-divider">Ringkasan</div>
-          <table>
-            <tbody id="ringkasan"></tbody>
-          </table>
           <div class="notice">
             Hasil ini simulasi, bukan penetapan gaji resmi. Pastikan dasar hukum
             dan komponen objek potongan diverifikasi sebelum digunakan untuk
@@ -1156,7 +1237,26 @@
           .join("");
       }
 
+      function renderSummaryBars(rows) {
+        const maximum = Math.max(...rows.map(([, value]) => value), 1);
+        $("ringkasanBar").innerHTML = rows
+          .map(([label, value]) => {
+            const percentage = maximum ? (value / maximum) * 100 : 0;
+            return `
+              <div class="summary-bar-row">
+                <span class="summary-bar-label">${label}</span>
+                <div class="summary-bar-track">
+                  <div class="summary-bar-fill" style="width: ${percentage}%"></div>
+                </div>
+                <strong class="summary-bar-value">${rupiah(value)}</strong>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
       function renderChart(h) {
+        const totalBruto = h.bruto + h.uangMakan + h.tunjKinerja;
         const tunjangan =
           h.tunjIstri +
           h.tunjAnak +
@@ -1178,8 +1278,8 @@
         const gajiEnd = gajiPercentage;
         const tunjanganEnd = gajiEnd + tunjanganPercentage;
 
-        $("chartTotal").textContent = rupiah(h.totalPenerimaan);
-        $("pieTotal").textContent = rupiah(h.totalPenerimaan);
+        $("chartTotal").textContent = `Bruto: ${rupiah(totalBruto)}`;
+        $("pieTotal").textContent = rupiah(totalBruto);
         $("valueGaji").textContent = rupiah(values.Gaji);
         $("valueTunjangan").textContent = rupiah(values.Tunjangan);
         $("valuePotongan").textContent = rupiah(values.Potongan);
@@ -1255,9 +1355,9 @@
             ["Pembulatan", h.pembulatan],
             [
               h.tpgLayak
-                ? "Bruto + Uang Makan bruto + TPG + Selisih Tukin"
-                : "Bruto + Makan bruto + Tukin/TPG",
-              h.bruto + h.uangMakan + h.tunjKinerja + h.pembulatan,
+                ? "Bruto + Makan bruto + TPG + Selisih Tukin"
+                : "Bruto + Makan bruto + Tukin",
+              h.bruto + h.uangMakan + h.tunjKinerja,
               "total",
             ],
           ]);
@@ -1275,7 +1375,7 @@
             ],
             ["Total semua potongan", h.totalSemuaPotongan, "total"],
           ]);
-          renderRows("ringkasan", [
+          const ringkasanRows = [
             [
               "Bruto - (IWP + BPJS)",
               h.bruto + h.pembulatan - h.totalPotongan,
@@ -1293,8 +1393,10 @@
                   ["Selisih Tukin", h.selisihTukin],
                 ]
               : [["Tunjangan kinerja", h.tunjKinerja]]),
-            ["TOTAL PENERIMAAN", h.totalPenerimaan, "total"],
-          ]);
+          ];
+          renderSummaryBars(
+            ringkasanRows.map(([label, value]) => [label, value]),
+          );
         } catch (e) {
           $("gradeInfo").textContent = "Grade tidak tersedia";
           $("error").textContent = e.message;
